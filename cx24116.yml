@@ -1,0 +1,14 @@
+---
+# file: cx24116.yml
+# this playbook sets up a complete yaVDR 0.7 installation
+
+- name: set up yaVDR
+  hosts: all
+  become: true
+  roles:
+     - autoinstall-tevii-firmware
+  tags:
+     - always
+
+  handlers:
+    - import_tasks: handlers/main.yml

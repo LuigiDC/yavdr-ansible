@@ -1,0 +1,64 @@
+---
+# file roles/autoinstall-tevii-firmware/tasks/main.yml
+
+- name: get information about usb and pci hardware and loaded kernel modules
+  hardware_facts:
+    usb: True
+    pci: True
+    modules: True
+    gpus: True
+
+- name: determine needed firmware files by device ids
+  block:
+    - name: add firmware for Tevii S460 to variable tevii_firmware_files if a card has been detected
+      set_fact:
+        dvbsky_firmware_files: "{{tevii_firmware_files}} + ['dvb-fe-cx24116.fw']"
+      with_items: '{{ tevii_cx24116_support }}'
+      when:
+        - '"{{ item }}" in pci'
+  when:
+    - not tevii_firmware_files
+
+- name: Download firmware for Tevii cards and copy required files to /lib/firmware
+  block:
+
+    - name: apt | unrar-free required -> install if not available
+      apt:
+        name: unrar-free
+        state: present
+        install_recommends: no
+
+    # download and extract firmware
+    - unarchive:
+        src: http://tevii.com/Tevii_linuxdriver_0815.rar
+        dest: /tmp/
+        remote_src: yes
+
+    # # copy firmware file
+    # - copy:
+    #     src: "/tmp/tevii_linuxdriver_0815/fw/{{ item }}"
+    #     #dest: /lib/firmware/
+    #     dest: /tmp/tevii
+    #     owner: root
+    #     group: root
+    #     mode: 0644
+    #   with_items: '{{ tevii_firmware_files }}'
+    #   #notify: ['Trigger Udev']
+
+  #  # Remove temporary files
+  #  - file:
+  #      path: /tmp/dvbsky-firmware
+  #      state: absent
+  when:
+    not(
+          (tevii_firmware_files is undefined)
+          or
+          (tevii_firmware_files is none)
+          or
+          (tevii_firmware_files | trim == '')
+        )
+
+  tags:
+    - install
+    - autodetect
+    - tevii
