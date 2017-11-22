@@ -35,10 +35,10 @@
     - name: Extract drivers
       command: unrar e /tmp/tevii/Tevii_linuxdriver_0815.rar /tmp/tevii/fw/ -o+
       
-    - name: Copy firmware drivers
+    - name: Copy firmware drivers to /lib/firmware/
       copy:
         src: "/tmp/tevii/fw/{{item}}"
-        dest: /tmp
+        dest: /lib/firmware
         owner: root
         group: root
         mode: 0644
